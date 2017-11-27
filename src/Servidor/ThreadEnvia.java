@@ -22,41 +22,38 @@ public class ThreadEnvia implements Runnable {
         this.main = main;
         this.serverAesKey=serverAesKey;
         
-        //Evento que ocurre al escribir en el areaTexto
+        // Agregar callback al campo texto para enviar mensajes
         main.campoTexto.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
                 mensaje = event.getActionCommand();
-                enviarDatos(mensaje); //se envia el mensaje
-                main.campoTexto.setText(""); //borra el texto del enterfield
-            } //Fin metodo actionPerformed
-        } 
-        );//Fin llamada a addActionListener
+                enviarDatos(mensaje); 
+                main.campoTexto.setText(""); 
+            } 
+        });
     } 
     
     
-    
-   //enviar objeto a cliente 
    private void enviarDatos(String mensaje){
       try {
-    	  
+    	  // Inicia el cifrado
     	  Cipher cf = Cipher.getInstance("AES/CBC/PKCS5Padding");
           cf.init(Cipher.ENCRYPT_MODE,serverAesKey);
           byte[] encodedParams = cf.getParameters().getEncoded();
-
+          
+          // Envia los parametros de cifrado al cliente
           salida.writeObject(encodedParams);
           byte[] theCph = cf.doFinal(mensaje.getBytes());
           
-          
+          // Envia el mensaje cifrado al cliente
          salida.writeObject(theCph);
+         salida.flush(); 
          
-         salida.flush(); //flush salida a cliente
-         main.agregarMensaje("Servidor>>> " + mensaje);
-      } //Fin try
+         main.agregarMensaje(conexion.getInetAddress().getHostName()+ " - Tu: ", mensaje, true);
+      } 
       catch (Exception e){ 
-         main.agregarMensaje("Error escribiendo Mensaje");
-      } //Fin catch  
-      
-   } //Fin methodo enviarDatos
+         main.agregarMensaje("Error escribiendo Mensaje", "", true);
+      }   
+   } 
 
 
    
@@ -70,37 +67,4 @@ public class ThreadEnvia implements Runnable {
         } catch (NullPointerException ex) {
         }
     }  
-    
-//    public static byte[] hexToBytes(String str) {
-//        if (str==null) {
-//           return null;
-//        } else if (str.length() < 2) {
-//           return null;
-//        } else {
-//           int len = str.length() / 2;
-//           byte[] buffer = new byte[len];
-//           for (int i=0; i<len; i++) {
-//               buffer[i] = (byte) Integer.parseInt(
-//                  str.substring(i*2,i*2+2),16);
-//           }
-//           return buffer;
-//        }
-//
-//     }
-//     public static String bytesToHex(byte[] data) {
-//        if (data==null) {
-//           return null;
-//        } else {
-//           int len = data.length;
-//           String str = "";
-//           for (int i=0; i<len; i++) {
-//              if ((data[i]&0xFF)<16) str = str + "0" 
-//                 + java.lang.Integer.toHexString(data[i]&0xFF);
-//              else str = str
-//                 + java.lang.Integer.toHexString(data[i]&0xFF);
-//           }
-//           return str.toUpperCase();
-//        }
-//     }            
-//   
 } 

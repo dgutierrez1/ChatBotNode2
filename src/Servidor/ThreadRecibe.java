@@ -33,10 +33,6 @@ public class ThreadRecibe implements Runnable {
        this.main = main;
        this.serverAesKey=serverAesKey;
    }  
-
-    public void mostrarMensaje(String mensaje) {
-        main.agregarMensaje(mensaje);
-    } 
    
     public void run() {
         try {
@@ -44,65 +40,67 @@ public class ThreadRecibe implements Runnable {
         } catch (IOException ex) {
             Logger.getLogger(ThreadRecibe.class.getName()).log(Level.SEVERE, null, ex);
         }
-        do { //procesa los mensajes enviados dsd el servidor
-            try {//leer el mensaje y mostrarlo 
-            	
+        do { 
+            try { 
+            	// Recibe los parametros cifrados del cliente
             	byte[] encodedParams=(byte[]) entrada.readObject();
-            	mensaje = (byte[]) entrada.readObject(); //leer nuevo mensaje
+            	
+            	// Recibe el mensaje cifrado del cliente
+            	mensaje = (byte[]) entrada.readObject();
+            	
+            	// Inicia el decifrado
             	AlgorithmParameters aesParams = AlgorithmParameters.getInstance("AES");
                 aesParams.init(encodedParams);
                 Cipher serverCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 serverCipher.init(Cipher.DECRYPT_MODE, serverAesKey, aesParams);
+                
+                // Descifra el mensaje enviado por el cliente
                 byte[] recovered = serverCipher.doFinal(mensaje);             
 				reconstitutedString = new String(recovered);
                 
-                
-                
-                main.agregarMensaje("Cliente>>> " + reconstitutedString);
-            } //fin try
+                // Imprime al mensaje
+				String clienteIP = cliente.getInetAddress().getHostAddress();
+	            String nombreCliente = cliente.getInetAddress().getHostName();
+	            main.agregarMensaje(clienteIP+" - "+ nombreCliente +" Cliente:" , reconstitutedString, false);
+
+            } 
             catch (SocketException ex) {
             }
             catch (EOFException eofException) {
-                main.agregarMensaje("Fin de la conexion");
+                main.agregarMensaje("Fin de la conexion", "", true);
                 System.out.println("Fin de la conexion");
                 break;
-            } //fin catch
+            } 
             catch (IOException ex) {
                 Logger.getLogger(ThreadRecibe.class.getName()).log(Level.SEVERE, null, ex);
             } catch (ClassNotFoundException classNotFoundException) {
-                main.agregarMensaje("Objeto desconocido");
-            } //fin catch               
- catch (IllegalBlockSizeException e1) {
-				// TODO Auto-generated catch block
+                main.agregarMensaje("Objeto desconocido", "", true);
+            } catch (IllegalBlockSizeException e1) {
 				e1.printStackTrace();
 			} catch (BadPaddingException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			} catch (InvalidKeyException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			} catch (InvalidAlgorithmParameterException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			} catch (NoSuchAlgorithmException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			} catch (NoSuchPaddingException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 
-        } while (!mensaje.equals("Servidor>>> TERMINATE")); //Ejecuta hasta que el server escriba TERMINATE
+        } while (!mensaje.equals("TERMINAR")); 
 
         try {
-            entrada.close(); //cierra input Stream
-            cliente.close(); //cieraa Socket
-        } //Fin try
+        	// Cerrar Streams
+            entrada.close(); 
+            cliente.close(); 
+        } 
         catch (IOException ioException) {
             ioException.printStackTrace();
-        } //fin catch
+        } 
 
-        main.agregarMensaje("Fin de la conexion");
+        main.agregarMensaje("Fin de la conexion", "", true);
         System.exit(0);
     } 
 } 
